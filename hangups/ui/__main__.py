@@ -1245,9 +1245,9 @@ def _copy_to_clip(var):
     If an exception is caught the function will be passed.'''
     if type(var) == str:
         try:
-            cmd = ("echo "
+            cmd = ("echo \""
                   + var
-                  + " | tr -d \'\\n\'"
+                  + "\" | tr -d \'\\n\'"
                   + " | xsel -i --clipboard")
             os.system(cmd)
         except:
