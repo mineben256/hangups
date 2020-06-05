@@ -911,14 +911,13 @@ class ConversationWidget(WidgetBase):
         )
 
     def keypress(self, size, key):
-        """Handle marking messages as read and keeping client active.
-        Additionally, handle copying messages."""
+        """Handle marking messages as read and keeping client active."""
         # Set the client as active.
         self._coroutine_queue.put(self._client.set_active())
 
         # Mark the newest event as read.
         self._coroutine_queue.put(self._conversation.update_read_timestamp())
-        
+
         return super().keypress(size, key)
 
     def _set_title(self):
@@ -948,7 +947,6 @@ class ConversationWidget(WidgetBase):
                 )
             )
         )
-    
 
     async def _handle_send_message(self, coro):
         """Handle showing an error if a message fails to send."""
@@ -1026,6 +1024,13 @@ class TabbedWindowWidget(WidgetBase):
                 focus = _lw[_lw._focus_position]
                 _message = focus._text
                 _copy_to_clip(_message)
+        elif key == self._keys['open']:
+            _convo = self.get_current_widget()
+            if hasattr(_convo, '_list_walker'):
+                _lw = _convo._list_walker
+                focus = _lw[_lw._focus_position]
+                _message = focus._text
+                xdg_opener(_message)
         else:
             return key
 
@@ -1144,8 +1149,10 @@ def main():
                   help='keybinding for alternate page up')
     key_group.add('--key-page-down', default='ctrl f',
                   help='keybinding for alternate page down')
-    key_group.add('--key-copy', default='ctrl o',
+    key_group.add('--key-copy', default='ctrl p',
                   help='keybinding for copy')
+    key_group.add('--key-open', default='ctrl o',
+                  help='keybinding for xdg-open')
     notification_group = parser.add_argument_group('Notifications')
     # deprecated in favor of --notification-type=none:
     notification_group.add('-n', '--disable-notifications',
@@ -1207,6 +1214,7 @@ def main():
         'page_up': args.key_page_up,
         'page_down': args.key_page_down,
         'copy': args.key_copy,
+	'open': args.key_open
     }
 
     notifier_ = get_notifier(
@@ -1222,26 +1230,19 @@ def main():
     except KeyboardInterrupt:
         sys.exit('Caught KeyboardInterrupt, exiting abnormally')
 
-
 def _copy_to_clip(var):
     '''Copy a variable of type str to clipboard.
-
     Argument:
     var -- Variable of type str to be copied.
-
     Example:
     var = 'test'
         Copytoclip(var)
-
         >>>
         >>>(Ctrl shift v)
         >>>test
-
     Credit to Dirk Mittler
     https://dirkmittler.homeip.net/blog/archives/6928
-
     Can only work on POSIX. May not work with your shell. 
-
     If an exception is caught the function will be passed.'''
     if type(var) == str:
         try:
@@ -1255,6 +1256,18 @@ def _copy_to_clip(var):
     pass
 
 
+def xdg_opener(var):
+    '''Open a string variable in xdg-open.'''
+    if type(var) == str:
+        try:
+            cmd = ("xdg-open \""
+                  + var
+                  + "\"")
+            os.system(cmd)
+        except:
+            pass
+    pass
+
+
 if __name__ == '__main__':
     main()
-
